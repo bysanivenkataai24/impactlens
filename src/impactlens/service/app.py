@@ -194,17 +194,13 @@ async def _read_upload(request: Request, settings: Settings) -> tuple[bytes, flo
             )
         upload = form.get("image")
         if not isinstance(upload, UploadFile):
-            raise ApiError(
-                422, "invalid_request", "A file field named 'image' is required."
-            )
+            raise ApiError(422, "invalid_request", "A file field named 'image' is required.")
         if len(form.getlist("image")) != 1:
             raise ApiError(422, "invalid_request", "Send exactly one 'image' file per request.")
         threshold = _parse_threshold(form.get("score_threshold"), settings)
         data = await upload.read()
     except TimeoutError:
-        raise ApiError(
-            408, "request_timeout", "The upload was not received in time."
-        ) from None
+        raise ApiError(408, "request_timeout", "The upload was not received in time.") from None
     except MultiPartException as exc:
         raise ApiError(422, "invalid_request", f"Malformed multipart body: {exc.message}") from None
     finally:
@@ -343,7 +339,9 @@ def create_app(
     async def ready() -> JSONResponse:
         """Same body as /health, but 503 when real inference is not possible."""
         payload = health_payload()
-        return JSONResponse(payload.model_dump(mode="json"), status_code=200 if payload.ready else 503)
+        return JSONResponse(
+            payload.model_dump(mode="json"), status_code=200 if payload.ready else 503
+        )
 
     @app.get(
         "/auth/check",

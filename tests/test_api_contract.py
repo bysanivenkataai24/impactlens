@@ -109,7 +109,9 @@ def test_unavailable_model_returns_503_and_never_detections(code, auth):
         assert response.status_code == 503
         assert error_code(response) == "model_unavailable"
         assert "detections" not in response.json()
-        assert "/srv/models" not in response.text and "/srv/models" not in client.get("/health").text
+        assert (
+            "/srv/models" not in response.text and "/srv/models" not in client.get("/health").text
+        )
 
 
 def test_unexpected_loader_crash_is_reported_as_model_load_failed(auth):
@@ -214,7 +216,9 @@ def test_image_sha256_is_the_hash_of_the_uploaded_bytes(client, auth):
     import hashlib
 
     data = canvas_with_block(64, 64, (8, 8, 32, 32))
-    assert post_image(client, data, auth).json()["image"]["sha256"] == hashlib.sha256(data).hexdigest()
+    assert (
+        post_image(client, data, auth).json()["image"]["sha256"] == hashlib.sha256(data).hexdigest()
+    )
 
 
 def test_no_detection_is_not_reported_as_undamaged(client, auth):
@@ -229,15 +233,21 @@ def test_no_detection_is_not_reported_as_undamaged(client, auth):
 @pytest.mark.parametrize("fmt", ["JPEG", "PNG", "WEBP"])
 def test_all_three_formats_are_decoded(client, auth, fmt):
     kwargs = {"lossless": True} if fmt == "WEBP" else {}
-    body = post_image(client, canvas_with_block(320, 160, (80, 40, 240, 120), fmt, **kwargs), auth).json()
+    body = post_image(
+        client, canvas_with_block(320, 160, (80, 40, 240, 120), fmt, **kwargs), auth
+    ).json()
     assert body["image"]["format"] == fmt
     assert body["detections"][0]["bbox"] == pytest.approx([0.25, 0.25, 0.75, 0.75], abs=0.02)
 
 
 # ----------------------------------------------------------------- threshold
-@pytest.mark.parametrize("value", ["abc", "nan", "inf", "-inf", "0", "0.049", "0.951", "1.5", "", "0.5,0.6"])
+@pytest.mark.parametrize(
+    "value", ["abc", "nan", "inf", "-inf", "0", "0.049", "0.951", "1.5", "", "0.5,0.6"]
+)
 def test_invalid_threshold_is_rejected(client, auth, adapter, value):
-    response = post_image(client, canvas_with_block(64, 64, (8, 8, 32, 32)), auth, score_threshold=value)
+    response = post_image(
+        client, canvas_with_block(64, 64, (8, 8, 32, 32)), auth, score_threshold=value
+    )
     assert response.status_code == 422
     assert error_code(response) == "invalid_request"
     assert adapter.calls == 0
@@ -245,7 +255,9 @@ def test_invalid_threshold_is_rejected(client, auth, adapter, value):
 
 @pytest.mark.parametrize("value", ["0.05", "0.5", "0.95", " 0.3 "])
 def test_valid_threshold_is_echoed(client, auth, value):
-    body = post_image(client, canvas_with_block(64, 64, (8, 8, 32, 32)), auth, score_threshold=value).json()
+    body = post_image(
+        client, canvas_with_block(64, 64, (8, 8, 32, 32)), auth, score_threshold=value
+    ).json()
     assert body["score_threshold"] == pytest.approx(float(value))
 
 
@@ -261,7 +273,13 @@ GIF = b"GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\xff\xff\xff!\xf9\x04\x01\
 
 @pytest.mark.parametrize(
     "payload",
-    [GIF, b"%PDF-1.7 not an image", b"<svg xmlns='http://www.w3.org/2000/svg'/>", b"BM" + b"\0" * 64, b"hello"],
+    [
+        GIF,
+        b"%PDF-1.7 not an image",
+        b"<svg xmlns='http://www.w3.org/2000/svg'/>",
+        b"BM" + b"\0" * 64,
+        b"hello",
+    ],
     ids=["gif", "pdf", "svg", "bmp", "text"],
 )
 def test_unsupported_content_is_415_regardless_of_declared_type(client, auth, adapter, payload):
@@ -287,7 +305,12 @@ def test_non_multipart_request_is_415(client, auth):
 def test_truncated_and_corrupt_images_are_422(client, auth, adapter):
     jpeg = canvas_with_block(256, 256, (10, 10, 100, 100), "JPEG")
     png = canvas_with_block(256, 256, (10, 10, 100, 100), "PNG")
-    for payload in (jpeg[: len(jpeg) // 3], png[:40], b"\xff\xd8\xff" + b"\x00" * 200, b"\x89PNG\r\n\x1a\n" + b"junk" * 50):
+    for payload in (
+        jpeg[: len(jpeg) // 3],
+        png[:40],
+        b"\xff\xd8\xff" + b"\x00" * 200,
+        b"\x89PNG\r\n\x1a\n" + b"junk" * 50,
+    ):
         response = post_image(client, payload, auth)
         assert response.status_code == 422, response.text
         assert error_code(response) == "malformed_image"
@@ -330,9 +353,13 @@ def test_unknown_form_field_is_rejected(client, auth):
 # --------------------------------------------------------------------- limits
 def _multipart(data: bytes, boundary: str = "testboundary") -> tuple[bytes, str]:
     body = (
-        f'--{boundary}\r\nContent-Disposition: form-data; name="image"; filename="p.png"\r\n'
-        "Content-Type: image/png\r\n\r\n"
-    ).encode() + data + f"\r\n--{boundary}--\r\n".encode()
+        (
+            f'--{boundary}\r\nContent-Disposition: form-data; name="image"; filename="p.png"\r\n'
+            "Content-Type: image/png\r\n\r\n"
+        ).encode()
+        + data
+        + f"\r\n--{boundary}--\r\n".encode()
+    )
     return body, f"multipart/form-data; boundary={boundary}"
 
 
@@ -435,7 +462,9 @@ def test_phone_style_rotated_upload_in_lossy_formats(client, auth, fmt):
     display[box[1] : box[3], box[0] : box[2]] = MAGENTA
     exif = Image.Exif()
     exif[0x0112] = 6
-    data = encode(Image.fromarray(np.ascontiguousarray(_stored_for_display(display, 6))), fmt, exif=exif)
+    data = encode(
+        Image.fromarray(np.ascontiguousarray(_stored_for_display(display, 6))), fmt, exif=exif
+    )
     body = post_image(client, data, auth).json()
     assert (body["image"]["width"], body["image"]["height"]) == (width, height)
     expected = [box[0] / width, box[1] / height, box[2] / width, box[3] / height]
@@ -533,7 +562,9 @@ def test_inference_error_is_500_without_leaking_details_or_detections(auth):
         assert "detections" not in response.json()
         # The service keeps working afterwards.
         adapter.fail_with = None
-        assert post_image(client, canvas_with_block(64, 64, (8, 8, 32, 32)), auth).status_code == 200
+        assert (
+            post_image(client, canvas_with_block(64, 64, (8, 8, 32, 32)), auth).status_code == 200
+        )
 
 
 def test_rate_limit_returns_429_with_retry_after(auth):
@@ -648,7 +679,9 @@ def test_static_ui_is_served_and_api_routes_keep_priority(tmp_path, auth):
         asset = client.get("/assets/app-abc123.js")
         assert asset.headers["cache-control"] == "public, max-age=31536000, immutable"
         assert client.get("/health").json()["status"] == "ok"
-        assert post_image(client, canvas_with_block(64, 64, (8, 8, 32, 32)), auth).status_code == 200
+        assert (
+            post_image(client, canvas_with_block(64, 64, (8, 8, 32, 32)), auth).status_code == 200
+        )
         assert client.get("/../pyproject.toml").status_code == 404
         assert client.get("/assets/%2e%2e/%2e%2e/pyproject.toml").status_code == 404
 

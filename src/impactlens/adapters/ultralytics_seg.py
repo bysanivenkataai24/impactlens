@@ -28,6 +28,9 @@ from ..taxonomy import class_mapping_problem, normalize_class_name
 from .base import AdapterInfo, ModelUnavailable, RawInstance
 
 SUPPORTED_SUFFIXES = (".pt",)
+#: Mirrors impactlens.training.provenance without importing the training package.
+CHECKPOINT_KEY = "impactlens"
+PURPOSE_SMOKE = "smoke_test_not_a_model"
 
 
 def configure_ultralytics_environment(*, offline: bool) -> None:
@@ -45,7 +48,7 @@ def disable_ultralytics_analytics() -> None:
         from ultralytics.utils.events import events
 
         events.enabled = False
-    except Exception:  # noqa: BLE001,S110 - analytics layout is not part of our contract
+    except Exception:  # noqa: S110 - analytics layout is not part of our contract
         pass
 
 
@@ -60,6 +63,7 @@ class UltralyticsSegAdapter:
         image_size: int | None = None,
         nms_iou: float = 0.7,
         warmup: bool = True,
+        allow_smoke_checkpoint: bool = False,
     ) -> None:
         checkpoint_path = Path(checkpoint_path)
         if checkpoint_path.suffix.lower() not in SUPPORTED_SUFFIXES:
@@ -76,7 +80,9 @@ class UltralyticsSegAdapter:
             import ultralytics
             from ultralytics import YOLO
         except Exception as exc:  # pragma: no cover - broken installation
-            raise ModelUnavailable("model_load_failed", f"model runtime import failed: {exc}") from exc
+            raise ModelUnavailable(
+                "model_load_failed", f"model runtime import failed: {exc}"
+            ) from exc
         disable_ultralytics_analytics()
 
         self._device = self._resolve_device(torch, device)
@@ -92,6 +98,18 @@ class UltralyticsSegAdapter:
         if task != "segment":
             raise ModelUnavailable(
                 "unsupported_task", f"checkpoint task is {task!r}; 'segment' is required"
+            )
+
+        # `impactlens smoke` trains on abstract shapes to test the pipeline. Such a
+        # checkpoint has the right task and class names, so it needs its own guard.
+        tag = model.ckpt.get(CHECKPOINT_KEY) if isinstance(model.ckpt, dict) else None
+        self.checkpoint_tag: dict | None = tag if isinstance(tag, dict) else None
+        if (self.checkpoint_tag or {}).get(
+            "purpose"
+        ) == PURPOSE_SMOKE and not allow_smoke_checkpoint:
+            raise ModelUnavailable(
+                "smoke_checkpoint_refused",
+                "this checkpoint was produced by the pipeline smoke test and is not a damage model",
             )
 
         raw_names = model.names

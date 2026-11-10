@@ -121,10 +121,7 @@ def build_detections(
             flags.append("mask_fragmented")
         if simplified:
             flags.append("polygon_simplified")
-        if (
-            min(x_min, y_min) <= BORDER_TOLERANCE
-            or max(x_max, y_max) >= 1.0 - BORDER_TOLERANCE
-        ):
+        if min(x_min, y_min) <= BORDER_TOLERANCE or max(x_max, y_max) >= 1.0 - BORDER_TOLERANCE:
             flags.append("touches_image_border")
         if area_px / float(width * height) < SMALL_REGION_FRACTION:
             flags.append("small_region")

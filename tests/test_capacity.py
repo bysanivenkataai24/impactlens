@@ -29,7 +29,9 @@ PHOTO = canvas_with_block(64, 64, (8, 8, 32, 32))
 
 
 async def _post(client: httpx.AsyncClient) -> httpx.Response:
-    return await client.post("/predict", headers=AUTH, files={"image": ("p.png", PHOTO, "image/png")})
+    return await client.post(
+        "/predict", headers=AUTH, files={"image": ("p.png", PHOTO, "image/png")}
+    )
 
 
 async def _until(predicate, timeout: float = 5.0) -> None:

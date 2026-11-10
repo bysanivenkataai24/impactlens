@@ -79,6 +79,7 @@ NotReadyReason = Literal[
     "unsupported_checkpoint_format",
     "unsupported_task",
     "class_mapping_mismatch",
+    "smoke_checkpoint_refused",
     "device_unavailable",
     "model_load_failed",
 ]

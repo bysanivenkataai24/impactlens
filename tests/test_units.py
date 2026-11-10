@@ -44,22 +44,40 @@ def test_defaults_are_safe():
 
 
 def test_complete_local_configuration_has_no_problems(tmp_path):
-    env = {"API_KEY": GOOD_KEY, "MODEL_ID": "impactlens/yolo11n-seg-v1", "MODEL_PATH": str(tmp_path / "m.pt")}
+    env = {
+        "API_KEY": GOOD_KEY,
+        "MODEL_ID": "impactlens/yolo11n-seg-v1",
+        "MODEL_PATH": str(tmp_path / "m.pt"),
+    }
     assert Settings.from_env(env).configuration_problems() == []
 
 
 def test_hub_configuration_requires_a_pinned_commit():
-    base = {"API_KEY": GOOD_KEY, "MODEL_ID": "m", "MODEL_REPO": "owner/repo", "MODEL_FILENAME": "best.pt"}
+    base = {
+        "API_KEY": GOOD_KEY,
+        "MODEL_ID": "m",
+        "MODEL_REPO": "owner/repo",
+        "MODEL_FILENAME": "best.pt",
+    }
     for revision in ("main", "v1.0", SHA[:12], SHA.upper()):
-        codes = [c for c, _ in Settings.from_env({**base, "MODEL_REVISION": revision}).configuration_problems()]
+        codes = [
+            c
+            for c, _ in Settings.from_env(
+                {**base, "MODEL_REVISION": revision}
+            ).configuration_problems()
+        ]
         assert codes == ["model_revision_not_pinned"], revision
     assert Settings.from_env({**base, "MODEL_REVISION": SHA}).configuration_problems() == []
-    assert [c for c, _ in Settings.from_env(base).configuration_problems()] == ["model_source_incomplete"]
+    assert [c for c, _ in Settings.from_env(base).configuration_problems()] == [
+        "model_source_incomplete"
+    ]
 
 
 def test_two_checkpoint_sources_are_ambiguous():
     env = {"API_KEY": GOOD_KEY, "MODEL_ID": "m", "MODEL_PATH": "a.pt", "MODEL_REPO": "o/r"}
-    assert [c for c, _ in Settings.from_env(env).configuration_problems()] == ["model_source_ambiguous"]
+    assert [c for c, _ in Settings.from_env(env).configuration_problems()] == [
+        "model_source_ambiguous"
+    ]
 
 
 @pytest.mark.parametrize(
@@ -96,14 +114,23 @@ def test_origins_are_normalized_and_deduplicated():
 
 
 def test_space_id_allows_only_the_hugging_face_frame():
-    assert Settings.from_env({"SPACE_ID": "owner/space"}).frame_ancestors == "'self' https://huggingface.co"
+    assert (
+        Settings.from_env({"SPACE_ID": "owner/space"}).frame_ancestors
+        == "'self' https://huggingface.co"
+    )
     explicit = Settings.from_env({"SPACE_ID": "owner/space", "FRAME_ANCESTORS": "'none'"})
     assert explicit.frame_ancestors == "'none'"
 
 
 def test_secrets_never_appear_in_repr_or_public_summary():
-    settings = Settings.from_env({"API_KEY": "super-secret-key-value-1234567890", "HF_TOKEN": "hf_secrettoken"})
-    for text in (repr(settings), str(settings.public_summary()), str(settings.configuration_problems())):
+    settings = Settings.from_env(
+        {"API_KEY": "super-secret-key-value-1234567890", "HF_TOKEN": "hf_secrettoken"}
+    )
+    for text in (
+        repr(settings),
+        str(settings.public_summary()),
+        str(settings.configuration_problems()),
+    ):
         assert "super-secret" not in text and "hf_secrettoken" not in text
 
 
@@ -187,7 +214,10 @@ def test_closing_vertex_and_repeats_are_removed():
     ring = np.array([[10, 10], [10, 10], [50, 10], [50, 50], [10, 50], [10, 10]], dtype=np.float64)
     (detection,), _ = build_detections(
         [RawInstance("dent", 0.5, (10, 10, 50, 50), ring)],
-        width=100, height=100, max_detections=10, max_polygon_points=50,
+        width=100,
+        height=100,
+        max_detections=10,
+        max_polygon_points=50,
     )
     assert len(detection.polygon) == 4
 
@@ -237,7 +267,11 @@ def test_limiter_memory_is_bounded():
 
 def test_csp_has_no_unsafe_sources():
     csp = content_security_policy("'none'")
-    assert "unsafe" not in csp and "default-src 'self'" in csp and csp.endswith("frame-ancestors 'none'")
+    assert (
+        "unsafe" not in csp
+        and "default-src 'self'" in csp
+        and csp.endswith("frame-ancestors 'none'")
+    )
 
 
 def test_forwarded_header_is_ignored_unless_proxies_are_trusted():
@@ -247,7 +281,11 @@ def test_forwarded_header_is_ignored_unless_proxies_are_trusted():
 
     def request(xff: str) -> Request:
         return Request(
-            {"type": "http", "client": ("10.0.0.9", 1234), "headers": [(b"x-forwarded-for", xff.encode())]}
+            {
+                "type": "http",
+                "client": ("10.0.0.9", 1234),
+                "headers": [(b"x-forwarded-for", xff.encode())],
+            }
         )
 
     assert client_address(request("1.2.3.4"), 0) == "10.0.0.9"
@@ -263,7 +301,11 @@ def test_sha256_and_default_revision(tmp_path):
     digest = hashlib.sha256(b"not really a checkpoint").hexdigest()
     assert sha256_file(checkpoint) == digest
     resolved = resolve_checkpoint(Settings(model_path=checkpoint))
-    assert (resolved.sha256, resolved.revision, resolved.source) == (digest, f"sha256:{digest[:12]}", "local")
+    assert (resolved.sha256, resolved.revision, resolved.source) == (
+        digest,
+        f"sha256:{digest[:12]}",
+        "local",
+    )
     labelled = resolve_checkpoint(Settings(model_path=checkpoint, model_revision="run-2026-11-10"))
     assert labelled.revision == "run-2026-11-10"
 
@@ -297,7 +339,9 @@ def test_default_loader_refuses_a_file_that_is_not_a_checkpoint(tmp_path):
 
     fake = tmp_path / "fake.pt"
     fake.write_bytes(b"this is not a torch checkpoint")
-    state = build_model_state(Settings(api_key=GOOD_KEY, model_id="m", model_path=fake), default_model_loader)
+    state = build_model_state(
+        Settings(api_key=GOOD_KEY, model_id="m", model_path=fake), default_model_loader
+    )
     assert state.ready is False and state.reasons == ["model_load_failed"]
 
 
@@ -306,9 +350,18 @@ def test_default_loader_refuses_unsupported_file_types(tmp_path):
 
     other = tmp_path / "model.onnx"
     other.write_bytes(b"x")
-    state = build_model_state(Settings(api_key=GOOD_KEY, model_id="m", model_path=other), default_model_loader)
+    state = build_model_state(
+        Settings(api_key=GOOD_KEY, model_id="m", model_path=other), default_model_loader
+    )
     assert state.reasons == ["unsupported_checkpoint_format"]
 
 
 def test_taxonomy_is_exactly_the_six_supported_classes():
-    assert MODEL_DAMAGE_TYPES == ("dent", "scratch", "crack", "glass_shatter", "lamp_broken", "tire_flat")
+    assert MODEL_DAMAGE_TYPES == (
+        "dent",
+        "scratch",
+        "crack",
+        "glass_shatter",
+        "lamp_broken",
+        "tire_flat",
+    )
