@@ -227,20 +227,41 @@ def create_app(
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         configure_pillow(settings.max_image_pixels)
-        # Loading is blocking work (file hashing, checkpoint deserialization, warm-up).
-        state: ModelState = await anyio.to_thread.run_sync(build_model_state, settings, loader)
-        app.state.model = state
-        app.state.inference = (
-            InferenceService(state.adapter, settings) if state.adapter is not None else None
+        # Until loading finishes, /health answers ready=false (model_loading) and
+        # /predict answers 503. The UI is served meanwhile, so a slow checkpoint
+        # download or warm-up never makes the whole site unreachable.
+        app.state.model = ModelState(
+            ready=False, reasons=["model_loading"], model_id=settings.model_id
         )
-        log.info("startup complete: ready=%s reasons=%s", state.ready, state.reasons)
+        app.state.inference = None
+
+        async def load() -> None:
+            # Blocking work (download, hashing, deserialization, warm-up) runs on a thread.
+            state: ModelState = await anyio.to_thread.run_sync(
+                build_model_state, settings, loader, abandon_on_cancel=True
+            )
+            # Publish the service before the state, so a ready state always has one.
+            app.state.inference = (
+                InferenceService(state.adapter, settings) if state.adapter is not None else None
+            )
+            app.state.model = state
+            log.info("model state settled: ready=%s reasons=%s", state.ready, state.reasons)
+
+        task = None
+        if settings.model_load_in_background:
+            task = asyncio.create_task(load(), name="impactlens-model-load")
+        else:
+            await load()
         try:
             yield
         finally:
+            if task is not None and not task.done():
+                task.cancel()
             if app.state.inference is not None:
                 await app.state.inference.aclose()
-            if state.adapter is not None:
-                state.adapter.close()
+            adapter = app.state.model.adapter
+            if adapter is not None:
+                adapter.close()
 
     app = FastAPI(
         title="ImpactLens inference service",
@@ -393,11 +414,15 @@ def create_app(
         state: ModelState = app.state.model
         service: InferenceService | None = app.state.inference
         if not state.ready or service is None:
+            loading = "model_loading" in state.reasons
             raise ApiError(
                 503,
                 "model_unavailable",
-                "No usable model is loaded, so no prediction was made. See /health.",
+                "The model is still loading; no prediction was made. Retry shortly."
+                if loading
+                else "No usable model is loaded, so no prediction was made. See /health.",
                 reasons=list(dict.fromkeys(state.reasons)),
+                retry_after_s=10 if loading else None,
             )
 
         if not service.try_admit():

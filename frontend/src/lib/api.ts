@@ -33,6 +33,7 @@ export interface UiError {
 export type Result<T> = { ok: true; value: T } | { ok: false; error: UiError };
 
 export const REASON_TEXT: Record<string, string> = {
+  model_loading: 'The service is up and still loading its checkpoint. Try again in a moment.',
   api_key_not_configured: 'The service has no API_KEY secret configured.',
   api_key_too_short: 'The service API_KEY is shorter than 24 characters.',
   model_id_not_configured: 'MODEL_ID is not set on the service.',
@@ -114,6 +115,9 @@ export async function errorFromResponse(response: Response): Promise<UiError> {
     case 'server_busy':
       return { ...base, kind: 'busy', title: 'Service at capacity', detail: body.message, retryAfterS: retryAfter(response, body.retry_after_s) };
     case 'model_unavailable':
+      if (body.reasons?.includes('model_loading')) {
+        return { ...base, kind: 'cold_start', title: 'Model still loading', detail: 'The service is starting and is still loading its checkpoint. No prediction was made; try again shortly.', reasons: body.reasons, retryAfterS: retryAfter(response, body.retry_after_s) };
+      }
       return { ...base, kind: 'model_unavailable', title: 'No model loaded', detail: 'The service is running but cannot make predictions, so no result was produced.', reasons: body.reasons };
     case 'inference_timeout':
       return { ...base, kind: 'server_timeout', title: 'Inference timed out', detail: `${body.message} The service may still be busy with that photo; wait before retrying.`, retryAfterS: retryAfter(response, body.retry_after_s) };

@@ -95,6 +95,8 @@ def make_settings(**overrides) -> Settings:
         "model_id": "synthetic-test-double",
         "model_path": Path("injected-by-test.pt"),
         "rate_limit_per_minute": 1000,
+        # Deterministic: the model is loaded before the first request (see test_capacity for background loading).
+        "model_load_in_background": False,
         # Hermetic: never pick up a locally built frontend/dist.
         "frontend_dist": Path("/nonexistent/impactlens-ui"),
     }

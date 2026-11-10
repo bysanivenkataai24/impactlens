@@ -66,6 +66,7 @@ ResponseWarning = Literal[
 
 #: Reasons ``/health`` may give for ``ready: false``.
 NotReadyReason = Literal[
+    "model_loading",
     "api_key_not_configured",
     "api_key_too_short",
     "model_id_not_configured",

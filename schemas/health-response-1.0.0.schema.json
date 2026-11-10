@@ -149,6 +149,7 @@
       "description": "Why the service is not ready. Empty when ready.",
       "items": {
         "enum": [
+          "model_loading",
           "api_key_not_configured",
           "api_key_too_short",
           "model_id_not_configured",

@@ -100,6 +100,7 @@ def test_two_checkpoint_sources_are_ambiguous():
         {"SOURCE_URL": "javascript:alert(1)"},
         {"MODEL_ID": "bad id with spaces"},
         {"LOG_LEVEL": "LOUD"},
+        {"MODEL_LOAD_MODE": "lazy"},
         {"TRUSTED_PROXY_HOPS": "-1"},
     ],
 )

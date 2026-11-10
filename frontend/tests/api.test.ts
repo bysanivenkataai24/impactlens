@@ -26,6 +26,12 @@ describe('errorFromResponse', () => {
     expect(error.requestId).toBe('rid');
   });
 
+  it('treats a model that is still loading as a cold start, not a failure', async () => {
+    const error = await errorFromResponse(json(envelope('model_unavailable', { reasons: ['model_loading'], retry_after_s: 10 }), 503));
+    expect(error.kind).toBe('cold_start');
+    expect(error.retryAfterS).toBe(10);
+  });
+
   it('treats a proxy page during start-up as a cold start', async () => {
     const error = await errorFromResponse(new Response('<html>Starting</html>', { status: 503 }));
     expect(error.kind).toBe('cold_start');

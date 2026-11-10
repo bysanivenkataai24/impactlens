@@ -169,3 +169,62 @@ def test_model_is_loaded_once_and_closed_on_shutdown():
 
     asyncio.run(main())
     assert len(loads) == 1 and adapter.calls == 3
+
+
+def test_background_loading_serves_health_and_ui_while_the_model_loads():
+    """The process answers immediately; /predict is 503 model_loading until the model is ready."""
+    adapter = SyntheticAdapter()
+    release = threading.Event()
+
+    def slow_loader(settings):
+        release.wait(timeout=10)
+        return synthetic_loader(adapter)(settings)
+
+    app = create_app(make_settings(model_load_in_background=True), model_loader=slow_loader)
+
+    async def main() -> None:
+        async with app.router.lifespan_context(app):
+            transport = httpx.ASGITransport(app=app)
+            async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+                health = (await client.get("/health")).json()
+                assert health["ready"] is False and health["reasons"] == ["model_loading"]
+                assert (await client.get("/ready")).status_code == 503
+                loading = await _post(client)
+                assert loading.status_code == 503
+                body = loading.json()["error"]
+                assert body["code"] == "model_unavailable" and body["reasons"] == ["model_loading"]
+                assert int(loading.headers["retry-after"]) > 0
+                assert adapter.calls == 0
+
+                release.set()
+                for _ in range(200):
+                    if (await client.get("/health")).json()["ready"]:
+                        break
+                    await asyncio.sleep(0.01)
+                assert (await client.get("/ready")).status_code == 200
+                assert (await _post(client)).status_code == 200
+
+    asyncio.run(main())
+
+
+def test_background_loading_failure_settles_to_not_ready():
+    from impactlens.adapters.base import ModelUnavailable
+
+    def failing_loader(_settings):
+        raise ModelUnavailable("checkpoint_download_failed", "blocked")
+
+    app = create_app(make_settings(model_load_in_background=True), model_loader=failing_loader)
+
+    async def main() -> None:
+        async with app.router.lifespan_context(app):
+            transport = httpx.ASGITransport(app=app)
+            async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+                for _ in range(200):
+                    reasons = (await client.get("/health")).json()["reasons"]
+                    if reasons != ["model_loading"]:
+                        break
+                    await asyncio.sleep(0.01)
+                assert reasons == ["checkpoint_download_failed"]
+                assert (await _post(client)).status_code == 503
+
+    asyncio.run(main())

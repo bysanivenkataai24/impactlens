@@ -42,7 +42,12 @@ def _path(variable: str) -> Path:
 
 
 def _settings(weights: Path) -> Settings:
-    return Settings(api_key=API_KEY, model_id="integration-test", model_path=weights)
+    return Settings(
+        api_key=API_KEY,
+        model_id="integration-test",
+        model_path=weights,
+        model_load_in_background=False,
+    )
 
 
 def test_coco_checkpoint_is_refused_by_class_mapping():

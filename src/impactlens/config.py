@@ -127,6 +127,8 @@ class Settings:
     frontend_dist: Path | None = None
     source_url: str | None = None
     log_level: str = "INFO"
+    #: Load the checkpoint after the server starts listening (True) or before (False).
+    model_load_in_background: bool = True
 
     # ------------------------------------------------------------------
     @classmethod
@@ -179,6 +181,10 @@ class Settings:
         if log_level not in {"DEBUG", "INFO", "WARNING", "ERROR"}:
             raise ConfigError("LOG_LEVEL must be DEBUG, INFO, WARNING or ERROR")
 
+        load_mode = (_clean(env, "MODEL_LOAD_MODE") or "background").lower()
+        if load_mode not in {"background", "blocking"}:
+            raise ConfigError("MODEL_LOAD_MODE must be 'background' or 'blocking'")
+
         model_path = _clean(env, "MODEL_PATH")
         frontend_dist = _clean(env, "FRONTEND_DIST")
 
@@ -216,6 +222,7 @@ class Settings:
             frontend_dist=Path(frontend_dist) if frontend_dist else None,
             source_url=source_url,
             log_level=log_level,
+            model_load_in_background=load_mode == "background",
         )
 
     # ------------------------------------------------------------------
