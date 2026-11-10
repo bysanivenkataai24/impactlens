@@ -105,14 +105,25 @@ def _data_export(args: argparse.Namespace) -> int:
 
 
 # -------------------------------------------------------------------- training
+def parse_overrides(items: list[str]) -> dict:
+    """``KEY=VALUE`` pairs; VALUE is read as JSON (numbers, booleans) or kept as text."""
+    overrides: dict = {}
+    for item in items:
+        key, sep, value = item.partition("=")
+        if not sep or not key.strip():
+            raise ValueError(f"--set expects KEY=VALUE, got {item!r}")
+        try:
+            overrides[key.strip()] = json.loads(value)
+        except json.JSONDecodeError:
+            overrides[key.strip()] = value
+    return overrides
+
+
 def _train(args: argparse.Namespace) -> int:
     from .training.config import load_train_config
     from .training.train import run_training
 
-    overrides = {}
-    for item in args.set or []:
-        key, _, value = item.partition("=")
-        overrides[key] = json.loads(value) if value[:1] in '[{0123456789tfn-"' else value
+    overrides = parse_overrides(args.set or [])
     config = load_train_config(args.config, overrides)
     run_dir = run_training(config, runs_dir=args.runs_dir)
     print(f"run directory: {run_dir}")

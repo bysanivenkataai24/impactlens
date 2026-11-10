@@ -146,6 +146,9 @@ def load_train_config(path: Path, overrides: dict | None = None) -> TrainConfig:
     if not isinstance(raw, dict):
         raise TrainConfigError(f"{path}: expected a mapping at the top level")
     raw.update(overrides or {})
+    # YAML and --set may give `device: 0`; the trainer accepts both, the record keeps one form.
+    if "device" in raw:
+        raw["device"] = str(raw["device"])
     augment = raw.pop("augment", {}) or {}
     if not isinstance(augment, dict):
         raise TrainConfigError(f"{path}: 'augment' must be a mapping")

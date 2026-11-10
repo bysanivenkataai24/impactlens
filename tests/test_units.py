@@ -396,3 +396,20 @@ def test_extensions_default_to_not_available_and_cannot_be_enabled_without_evide
         CostInterval("INR", 1000, 2000, (), evidence)
     with pytest.raises(ValueError):
         CostInterval("INR", 3000, 2000, ("labour rate 2026 Bengaluru",), evidence)
+
+
+def test_cli_overrides_parse_json_or_text():
+    from impactlens.cli import parse_overrides
+
+    parsed = parse_overrides(
+        ["device=cpu", "amp=false", "epochs=2", "fraction=0.05", "tracker=tensorboard", "device=0"]
+    )
+    assert parsed == {
+        "device": 0,
+        "amp": False,
+        "epochs": 2,
+        "fraction": 0.05,
+        "tracker": "tensorboard",
+    }
+    with pytest.raises(ValueError):
+        parse_overrides(["oops"])
