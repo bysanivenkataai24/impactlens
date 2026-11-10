@@ -38,3 +38,4 @@ models/*
 .vscode/
 frontend/e2e/.fixtures/
 frontend/node_modules/.tmp/
+build/

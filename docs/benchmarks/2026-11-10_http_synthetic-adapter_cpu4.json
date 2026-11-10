@@ -1,0 +1,130 @@
+{
+  "kind": "impactlens.benchmark.http",
+  "created_utc": "2026-11-10T15:08:59+00:00",
+  "target": {
+    "url": "http://127.0.0.1:7862",
+    "model_id": "synthetic-test-double",
+    "model_revision": "test",
+    "checkpoint_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "device": "cpu"
+  },
+  "input": {
+    "file": "photo_1920x1080.jpg",
+    "bytes": 1440938,
+    "sha256": "0e263cb7df518867d58120da78da9853ba63a46a722cbe53054f49adcd6afd37"
+  },
+  "client_environment": {
+    "recorded_utc": "2026-11-10T15:09:00+00:00",
+    "python": "3.12.3",
+    "platform": "Linux-6.18.44-fc-v338-x86_64-with-glibc2.39",
+    "processor": "x86_64",
+    "torch": "2.15.0+cpu",
+    "ultralytics": "8.4.208",
+    "numpy": "2.5.4",
+    "cuda_available": false,
+    "requested_device": null,
+    "git_commit": "afc63d136841c745244f56a0df3cf09f8bab0953-dirty",
+    "cpu_count_logical": 4,
+    "memory_total_gb": 15.7
+  },
+  "levels": [
+    {
+      "concurrency": 1,
+      "requests": 40,
+      "status_counts": {
+        "200": 40
+      },
+      "successful": 40,
+      "end_to_end": {
+        "count": 40,
+        "mean_ms": 53.12,
+        "p50_ms": 52.11,
+        "p95_ms": 64.29,
+        "max_ms": 67.64
+      },
+      "server_reported_total": {
+        "count": 40,
+        "mean_ms": 49.82,
+        "p50_ms": 48.97,
+        "p95_ms": 61.27,
+        "max_ms": 64.24
+      },
+      "throughput_successful_rps": 18.81,
+      "wall_time_s": 2.13
+    },
+    {
+      "concurrency": 2,
+      "requests": 40,
+      "status_counts": {
+        "200": 40
+      },
+      "successful": 40,
+      "end_to_end": {
+        "count": 40,
+        "mean_ms": 99.89,
+        "p50_ms": 99.54,
+        "p95_ms": 114.02,
+        "max_ms": 122.44
+      },
+      "server_reported_total": {
+        "count": 40,
+        "mean_ms": 93.36,
+        "p50_ms": 92.07,
+        "p95_ms": 110.21,
+        "max_ms": 117.81
+      },
+      "throughput_successful_rps": 19.77,
+      "wall_time_s": 2.02
+    },
+    {
+      "concurrency": 4,
+      "requests": 40,
+      "status_counts": {
+        "200": 40
+      },
+      "successful": 40,
+      "end_to_end": {
+        "count": 40,
+        "mean_ms": 204.48,
+        "p50_ms": 207.11,
+        "p95_ms": 237.88,
+        "max_ms": 247.75
+      },
+      "server_reported_total": {
+        "count": 40,
+        "mean_ms": 197.1,
+        "p50_ms": 200.16,
+        "p95_ms": 229.49,
+        "max_ms": 234.22
+      },
+      "throughput_successful_rps": 18.94,
+      "wall_time_s": 2.11
+    },
+    {
+      "concurrency": 8,
+      "requests": 40,
+      "status_counts": {
+        "200": 6,
+        "429": 34
+      },
+      "successful": 6,
+      "end_to_end": {
+        "count": 6,
+        "mean_ms": 203.61,
+        "p50_ms": 212.15,
+        "p95_ms": 298.91,
+        "max_ms": 299.29
+      },
+      "server_reported_total": {
+        "count": 6,
+        "mean_ms": 191.92,
+        "p50_ms": 200.3,
+        "p95_ms": 283.88,
+        "max_ms": 286.11
+      },
+      "throughput_successful_rps": 16.35,
+      "wall_time_s": 0.37
+    }
+  ],
+  "caveat": "Latency includes the network between this client and the service. 429 responses are the service's rate or capacity limits working as configured; they are reported, not retried."
+}

@@ -1,0 +1,59 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.32"
+      - run: uv sync --frozen
+      - run: uv run ruff check src tests
+      - run: uv run ruff format --check src tests
+      - run: uv run impactlens schema --check
+      # Contract tests use a synthetic adapter; integration tests skip without weights.
+      - run: uv run pytest -q
+
+  frontend:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.32"
+      - run: uv sync --frozen
+        working-directory: .
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
+
+  docker:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t impactlens:ci .
+      - name: Not ready without configuration, UI served, predict needs a key
+        run: |
+          docker run -d --name il -p 7860:7860 impactlens:ci
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:7860/health && break; sleep 2; done
+          curl -fsS http://127.0.0.1:7860/health | grep -q '"ready":false'
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:7860/ready)" = 503
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:7860/predict)" = 401
+          curl -fsS http://127.0.0.1:7860/ | grep -q '<div id="root">'

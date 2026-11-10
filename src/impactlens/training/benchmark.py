@@ -31,6 +31,7 @@ _COLD_START_SNIPPET = """
 import json, sys, time, resource
 t0 = time.perf_counter()
 from pathlib import Path
+import torch, ultralytics  # counted as import time, not model load
 from impactlens.adapters.ultralytics_seg import UltralyticsSegAdapter
 t1 = time.perf_counter()
 adapter = UltralyticsSegAdapter(Path(sys.argv[1]), device=sys.argv[2], image_size=int(sys.argv[3]), allow_smoke_checkpoint=True)
