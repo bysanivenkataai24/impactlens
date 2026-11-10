@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-label="Illustration of a generic hatchback, side view. Not a photograph.">
+  <!-- Original illustration made for the ImpactLens demo (CC0-1.0). Not a photograph and not a real vehicle. -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cfe3f2"/>
+      <stop offset="1" stop-color="#eef3f7"/>
+    </linearGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4a76a8"/>
+      <stop offset="1" stop-color="#2d4f78"/>
+    </linearGradient>
+    <radialGradient id="dent" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#1b324e" stop-opacity="0.85"/>
+      <stop offset="0.7" stop-color="#2d4f78" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#2d4f78" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#sky)"/>
+  <rect y="600" width="1200" height="200" fill="#9aa3ab"/>
+  <rect y="600" width="1200" height="6" fill="#7d868e"/>
+  <!-- body -->
+  <path d="M150 560 L150 470 Q160 430 230 415 L330 400 L430 300 Q450 282 480 280 L760 280 Q800 282 830 310 L930 405 L1010 420 Q1060 432 1065 470 L1065 560 Z" fill="url(#body)" stroke="#1d3654" stroke-width="4"/>
+  <!-- windows -->
+  <path d="M455 305 L380 398 L610 398 L610 300 L485 300 Q468 300 455 305 Z" fill="#a9c8de" stroke="#1d3654" stroke-width="3"/>
+  <path d="M630 300 L630 398 L880 398 L805 318 Q790 302 765 300 Z" fill="#a9c8de" stroke="#1d3654" stroke-width="3"/>
+  <!-- door seams and handles -->
+  <path d="M620 300 L620 560" stroke="#1d3654" stroke-width="3"/>
+  <path d="M380 400 L380 560" stroke="#1d3654" stroke-width="3"/>
+  <rect x="540" y="430" width="50" height="10" rx="5" fill="#d7dee5"/>
+  <rect x="790" y="430" width="50" height="10" rx="5" fill="#d7dee5"/>
+  <!-- lamps -->
+  <path d="M1020 440 L1062 448 L1062 486 L1024 482 Z" fill="#f7e7a1" stroke="#1d3654" stroke-width="3"/>
+  <path d="M152 450 L190 446 L190 486 L152 490 Z" fill="#c9433a" stroke="#1d3654" stroke-width="3"/>
+  <!-- illustrated damage: broken rear lamp -->
+  <path d="M158 455 L172 470 L160 484 M172 470 L186 452 M172 470 L188 478" stroke="#2b1110" stroke-width="3" fill="none"/>
+  <!-- illustrated damage: dent on rear door -->
+  <ellipse cx="740" cy="500" rx="70" ry="38" fill="url(#dent)"/>
+  <!-- illustrated damage: scratch on front door -->
+  <path d="M420 515 C 470 505, 520 512, 590 498" stroke="#e8edf2" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path d="M425 522 C 475 512, 525 519, 585 506" stroke="#c4ccd4" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- wheels -->
+  <circle cx="300" cy="565" r="78" fill="#23272b"/>
+  <circle cx="300" cy="565" r="40" fill="#8f979e"/>
+  <circle cx="900" cy="565" r="78" fill="#23272b"/>
+  <circle cx="900" cy="565" r="40" fill="#8f979e"/>
+  <text x="600" y="760" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="30" font-weight="700" fill="#5b2a12">ILLUSTRATION - not a photograph, not model output</text>
+</svg>
