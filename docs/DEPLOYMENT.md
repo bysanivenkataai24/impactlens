@@ -59,8 +59,8 @@ Use `--protected` instead of `--public` to keep the source private while the app
 stays reachable. ImpactLens is AGPL-3.0, so users of the running app must still
 be able to obtain its source: set `SOURCE_URL` (below) to a public copy.
 
-Space URL: `https://<owner>-impactlens.hf.space` (the `SPACE_HOST` the platform
-injects; lower-cased, `/` replaced by `-`).
+Space URL: typically `https://<owner>-impactlens.hf.space`. The exact host is
+shown on the Space page ("Embed this Space") and injected as `SPACE_HOST`.
 
 ## 3. Secrets and variables
 
