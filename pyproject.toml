@@ -1,0 +1,92 @@
+[project]
+name = "impactlens"
+version = "0.1.0"
+description = "ImpactLens: decision-support vehicle damage segmentation service, review UI and reproducible training workflow."
+readme = "README.md"
+requires-python = "==3.12.*"
+license = "AGPL-3.0-only"
+license-files = ["LICENSE"]
+authors = [{ name = "ImpactLens contributors" }]
+dependencies = [
+  # --- web service ---
+  "fastapi>=0.162,<1",
+  "uvicorn>=0.54,<1",
+  "python-multipart>=0.0.33",
+  "pydantic>=2.14,<3",
+  # --- imaging / numerics ---
+  "pillow>=13,<14",
+  "numpy>=2.5,<3",
+  "opencv-python-headless>=5.0,<6",
+  # --- model runtime (AGPL-3.0, see docs/LICENSING.md) ---
+  "ultralytics>=8.4.208,<8.5",
+  "torch>=2.15,<2.16",
+  "torchvision>=0.29,<0.30",
+  # --- optional checkpoint download from a pinned Hugging Face revision ---
+  "huggingface-hub>=2.4,<3",
+  "pyyaml>=6",
+]
+
+[project.scripts]
+impactlens = "impactlens.cli:main"
+
+[dependency-groups]
+dev = [
+  "pytest>=9.2,<10",
+  "httpx>=0.28,<1",
+  "ruff>=0.17",
+]
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/impactlens"]
+
+# ---------------------------------------------------------------------------
+# uv resolution
+# ---------------------------------------------------------------------------
+[tool.uv]
+# The lock is resolved and tested for Linux x86_64 / CPython 3.12 only (the
+# Docker image and the development container). Other platforms must re-lock.
+environments = ["sys_platform == 'linux' and platform_machine == 'x86_64'"]
+# Ultralytics depends on the GUI build of OpenCV, which needs libGL/X11 system
+# libraries that a slim server image does not have. Both distributions ship the
+# same `cv2` module, so the GUI build is excluded and the headless build
+# (declared above) provides it.
+override-dependencies = ["opencv-python ; sys_platform == 'never'"]
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu" }]
+torchvision = [{ index = "pytorch-cpu" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+# ---------------------------------------------------------------------------
+# tooling
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+  "contract: API contract tests that inject a SYNTHETIC adapter. They check request/response behaviour, never model quality.",
+  "integration: opt-in tests that load a real Ultralytics checkpoint (set IMPACTLENS_TEST_WEIGHTS).",
+]
+filterwarnings = ["error::pytest.PytestUnraisableExceptionWarning"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "C4", "SIM", "RUF"]
+ignore = [
+  "S101", # assert is fine in tests and for internal invariants
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106", "S108", "S311"]

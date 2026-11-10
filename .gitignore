@@ -1,0 +1,38 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+build/
+
+# Node / frontend
+node_modules/
+frontend/dist/
+frontend/test-results/
+frontend/playwright-report/
+
+# Secrets and local configuration - never commit
+.env
+.env.*
+!.env.example
+
+# Data, checkpoints and experiment outputs stay out of git.
+# Dataset images may not be redistributed (see docs/DATASET_CARD.md) and
+# checkpoints are published separately with a pinned revision and SHA-256.
+datasets/
+data/raw/
+runs/
+*.pt
+*.pth
+*.onnx
+*.torchscript
+*.engine
+models/*
+!models/README.md
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
