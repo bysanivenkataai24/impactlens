@@ -490,6 +490,27 @@ def create_app(
         )
         return JSONResponse(response.model_dump(mode="json"))
 
+    # Wrong methods on API paths are 405 whether or not the UI is mounted at "/"
+    # (otherwise the static mount would answer them with 404).
+    api_methods = {
+        "/predict": {"POST"},
+        "/health": {"GET"},
+        "/ready": {"GET"},
+        "/auth/check": {"GET"},
+    }
+    for path, allowed in api_methods.items():
+        others = sorted({"GET", "POST", "PUT", "PATCH", "DELETE"} - allowed)
+
+        async def method_not_allowed(_request: Request, allowed=allowed) -> JSONResponse:
+            raise ApiError(
+                405,
+                "method_not_allowed",
+                "Method not allowed.",
+                headers={"Allow": ", ".join(sorted(allowed))},
+            )
+
+        app.add_api_route(path, method_not_allowed, methods=others, include_in_schema=False)
+
     # --- static review UI (registered last so API routes win) ---------------
     dist = settings.frontend_dist or Path(__file__).resolve().parents[3] / "frontend" / "dist"
     if (dist / "index.html").is_file():

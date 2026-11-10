@@ -365,3 +365,33 @@ def test_taxonomy_is_exactly_the_six_supported_classes():
         "lamp_broken",
         "tire_flat",
     )
+
+
+# --------------------------------------------------------------- extensions
+def test_extensions_default_to_not_available_and_cannot_be_enabled_without_evidence():
+    from impactlens.extensions import (
+        CostInterval,
+        NoCostModel,
+        NoPartModel,
+        NoSeverityModel,
+        ValidationEvidence,
+        VehicleFacts,
+        require_evidence,
+    )
+
+    assert NoPartModel().assign(None, None) is None
+    assert NoSeverityModel().estimate(None, None) == "unknown"
+    assert NoCostModel().estimate([], VehicleFacts(make="Maruti Suzuki")) is None
+    for extension in (NoPartModel(), NoSeverityModel(), NoCostModel()):
+        with pytest.raises(RuntimeError, match="no validation evidence"):
+            require_evidence(extension)
+
+    with pytest.raises(ValueError, match="held-out"):
+        ValidationEvidence("r1", "train", "mae", 1.0, 10, "p", "report.json")
+    evidence = ValidationEvidence(
+        "r1", "test", "interval coverage", 0.9, 400, "documented", "report.json"
+    )
+    with pytest.raises(ValueError, match="assumptions"):
+        CostInterval("INR", 1000, 2000, (), evidence)
+    with pytest.raises(ValueError):
+        CostInterval("INR", 3000, 2000, ("labour rate 2026 Bengaluru",), evidence)

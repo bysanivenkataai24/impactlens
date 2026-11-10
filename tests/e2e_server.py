@@ -28,7 +28,9 @@ from impactlens.service import create_app  # noqa: E402
 from tests.conftest import API_KEY, MAGENTA, SyntheticAdapter, make_settings, synthetic_loader  # noqa: E402
 
 
-def _canvas(width: int, height: int, box: tuple[int, int, int, int] | None, base=(120, 128, 136)) -> np.ndarray:
+def _canvas(
+    width: int, height: int, box: tuple[int, int, int, int] | None, base=(120, 128, 136)
+) -> np.ndarray:
     pixels = np.empty((height, width, 3), dtype=np.uint8)
     pixels[:] = base
     # A little texture so the photos are not flat.
@@ -50,7 +52,9 @@ def write_fixtures(directory: Path) -> None:
     exif = Image.Exif()
     exif[0x0112] = 6
     buffer = io.BytesIO()
-    Image.fromarray(np.ascontiguousarray(stored)).save(buffer, "JPEG", quality=95, subsampling=0, exif=exif)
+    Image.fromarray(np.ascontiguousarray(stored)).save(
+        buffer, "JPEG", quality=95, subsampling=0, exif=exif
+    )
     (directory / "portrait-exif6.jpg").write_bytes(buffer.getvalue())
 
     # Landscape PNG, 1200x800, block at [0.5, 0.5, 0.75, 0.75].
@@ -60,7 +64,9 @@ def write_fixtures(directory: Path) -> None:
     Image.fromarray(_canvas(800, 600, None, base=(90, 140, 100))).save(directory / "no-region.png")
 
     # Lossless WebP square with block at [0.25, 0.25, 0.5, 0.5].
-    Image.fromarray(_canvas(640, 640, (160, 160, 320, 320))).save(directory / "square.webp", lossless=True)
+    Image.fromarray(_canvas(640, 640, (160, 160, 320, 320))).save(
+        directory / "square.webp", lossless=True
+    )
 
     # Not an image at all, despite its name.
     (directory / "not-a-photo.jpg").write_bytes(b"This is a text file pretending to be a JPEG.\n")
@@ -74,10 +80,15 @@ def main() -> None:
     args = parser.parse_args()
 
     write_fixtures(args.fixtures)
-    settings = make_settings(frontend_dist=args.dist, model_id="synthetic-test-double", rate_limit_per_minute=10_000)
+    settings = make_settings(
+        frontend_dist=args.dist, model_id="synthetic-test-double", rate_limit_per_minute=10_000
+    )
     app = create_app(settings, model_loader=synthetic_loader(SyntheticAdapter()))
     logging.basicConfig(level="WARNING")
-    print(f"E2E server (SYNTHETIC adapter, not a model) on http://127.0.0.1:{args.port} key={API_KEY}", flush=True)
+    print(
+        f"E2E server (SYNTHETIC adapter, not a model) on http://127.0.0.1:{args.port} key={API_KEY}",
+        flush=True,
+    )
     uvicorn.run(app, host="127.0.0.1", port=args.port, log_level="warning", access_log=False)
 
 

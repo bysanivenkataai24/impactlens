@@ -95,6 +95,8 @@ def make_settings(**overrides) -> Settings:
         "model_id": "synthetic-test-double",
         "model_path": Path("injected-by-test.pt"),
         "rate_limit_per_minute": 1000,
+        # Hermetic: never pick up a locally built frontend/dist.
+        "frontend_dist": Path("/nonexistent/impactlens-ui"),
     }
     values.update(overrides)
     return Settings(**values)

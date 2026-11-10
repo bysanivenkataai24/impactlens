@@ -682,6 +682,9 @@ def test_static_ui_is_served_and_api_routes_keep_priority(tmp_path, auth):
         assert (
             post_image(client, canvas_with_block(64, 64, (8, 8, 32, 32)), auth).status_code == 200
         )
+        wrong = client.get("/predict")
+        assert wrong.status_code == 405 and wrong.headers["allow"] == "POST"
+        assert client.post("/health").status_code == 405
         assert client.get("/../pyproject.toml").status_code == 404
         assert client.get("/assets/%2e%2e/%2e%2e/pyproject.toml").status_code == 404
 
