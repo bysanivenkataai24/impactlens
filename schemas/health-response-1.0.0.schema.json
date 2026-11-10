@@ -1,0 +1,228 @@
+{
+  "$defs": {
+    "ScoreThresholdLimits": {
+      "additionalProperties": false,
+      "properties": {
+        "default": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Default",
+          "type": "number"
+        },
+        "max": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Max",
+          "type": "number"
+        },
+        "min": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Min",
+          "type": "number"
+        }
+      },
+      "required": [
+        "default",
+        "min",
+        "max"
+      ],
+      "title": "ScoreThresholdLimits",
+      "type": "object"
+    },
+    "ServiceLimits": {
+      "additionalProperties": false,
+      "properties": {
+        "accepted_media_types": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Accepted Media Types",
+          "type": "array"
+        },
+        "inference_timeout_s": {
+          "title": "Inference Timeout S",
+          "type": "number"
+        },
+        "max_detections": {
+          "title": "Max Detections",
+          "type": "integer"
+        },
+        "max_image_pixels": {
+          "title": "Max Image Pixels",
+          "type": "integer"
+        },
+        "max_polygon_points": {
+          "title": "Max Polygon Points",
+          "type": "integer"
+        },
+        "max_upload_bytes": {
+          "title": "Max Upload Bytes",
+          "type": "integer"
+        },
+        "min_image_side": {
+          "title": "Min Image Side",
+          "type": "integer"
+        },
+        "score_threshold": {
+          "$ref": "#/$defs/ScoreThresholdLimits"
+        }
+      },
+      "required": [
+        "max_upload_bytes",
+        "max_image_pixels",
+        "min_image_side",
+        "accepted_media_types",
+        "score_threshold",
+        "max_detections",
+        "max_polygon_points",
+        "inference_timeout_s"
+      ],
+      "title": "ServiceLimits",
+      "type": "object"
+    }
+  },
+  "$id": "impactlens/health-response/1.0.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "checkpoint_sha256": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Checkpoint Sha256"
+    },
+    "classes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Classes",
+      "type": "array"
+    },
+    "device": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Device"
+    },
+    "limits": {
+      "$ref": "#/$defs/ServiceLimits"
+    },
+    "model_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Model Id"
+    },
+    "model_revision": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Model Revision"
+    },
+    "ready": {
+      "description": "True only when /predict can run real inference.",
+      "title": "Ready",
+      "type": "boolean"
+    },
+    "reasons": {
+      "description": "Why the service is not ready. Empty when ready.",
+      "items": {
+        "enum": [
+          "api_key_not_configured",
+          "api_key_too_short",
+          "model_id_not_configured",
+          "model_not_configured",
+          "model_source_ambiguous",
+          "model_source_incomplete",
+          "model_revision_not_pinned",
+          "checkpoint_not_found",
+          "checkpoint_download_failed",
+          "checkpoint_hash_mismatch",
+          "unsupported_checkpoint_format",
+          "unsupported_task",
+          "class_mapping_mismatch",
+          "smoke_checkpoint_refused",
+          "device_unavailable",
+          "model_load_failed"
+        ],
+        "type": "string"
+      },
+      "title": "Reasons",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "service_version": {
+      "title": "Service Version",
+      "type": "string"
+    },
+    "source_url": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Where the source code of this deployment can be obtained (AGPL-3.0).",
+      "title": "Source Url"
+    },
+    "status": {
+      "const": "ok",
+      "default": "ok",
+      "title": "Status",
+      "type": "string"
+    },
+    "task": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Task"
+    }
+  },
+  "required": [
+    "ready",
+    "model_id",
+    "model_revision",
+    "checkpoint_sha256",
+    "task",
+    "classes",
+    "device",
+    "limits",
+    "service_version",
+    "source_url"
+  ],
+  "title": "HealthResponse",
+  "type": "object"
+}

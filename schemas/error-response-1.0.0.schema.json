@@ -1,0 +1,110 @@
+{
+  "$defs": {
+    "ErrorBody": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "enum": [
+            "unauthenticated",
+            "rate_limited",
+            "server_busy",
+            "model_unavailable",
+            "unsupported_media_type",
+            "payload_too_large",
+            "image_pixel_limit_exceeded",
+            "malformed_image",
+            "image_too_small",
+            "invalid_request",
+            "request_timeout",
+            "inference_timeout",
+            "inference_failed",
+            "not_found",
+            "method_not_allowed",
+            "internal_error"
+          ],
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "reasons": {
+          "anyOf": [
+            {
+              "items": {
+                "enum": [
+                  "api_key_not_configured",
+                  "api_key_too_short",
+                  "model_id_not_configured",
+                  "model_not_configured",
+                  "model_source_ambiguous",
+                  "model_source_incomplete",
+                  "model_revision_not_pinned",
+                  "checkpoint_not_found",
+                  "checkpoint_download_failed",
+                  "checkpoint_hash_mismatch",
+                  "unsupported_checkpoint_format",
+                  "unsupported_task",
+                  "class_mapping_mismatch",
+                  "smoke_checkpoint_refused",
+                  "device_unavailable",
+                  "model_load_failed"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reasons"
+        },
+        "request_id": {
+          "title": "Request Id",
+          "type": "string"
+        },
+        "retry_after_s": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Retry After S"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "request_id"
+      ],
+      "title": "ErrorBody",
+      "type": "object"
+    }
+  },
+  "$id": "impactlens/error-response/1.0.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "error": {
+      "$ref": "#/$defs/ErrorBody"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "error"
+  ],
+  "title": "ErrorResponse",
+  "type": "object"
+}
