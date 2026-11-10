@@ -198,7 +198,6 @@ class UltralyticsSegAdapter:
                 device=self._device,
                 max_det=int(max_detections),
                 retina_masks=False,
-                half=False,
                 save=False,
                 stream=False,
                 verbose=False,

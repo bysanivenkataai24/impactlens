@@ -1,0 +1,58 @@
+# Alternative capacity: YOLO11s-seg (about 3.5x the parameters of 11n) at 640 px.
+#   https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11s-seg.pt
+#   80 COCO classes, AGPL-3.0, SHA-256 measured 2026-11-10.
+# Worth its CPU latency only if validation AP improves materially; benchmark both.
+experiment: alternative_yolo11s_640
+data: datasets/impactlens-v1/dataset.yaml
+init_checkpoint: yolo11s-seg.pt
+init_checkpoint_sha256: 1caa81c0195412efa411b632bcfb8c184939dddb6ae41f6a80c41b211ff257c3
+seed: 20261110
+image_size: 640
+batch_size: 16
+epochs: 150
+patience: 30              # early stopping on validation fitness
+optimizer: AdamW
+lr0: 0.001
+lrf: 0.01                 # final LR = lr0 * lrf
+cos_lr: true              # cosine schedule after linear warm-up
+momentum: 0.937           # AdamW beta1
+weight_decay: 0.0005
+warmup_epochs: 3.0
+box_gain: 7.5
+cls_gain: 0.5
+dfl_gain: 1.5
+cls_pw: 0.0               # no class re-weighting in the baseline (see ablations)
+overlap_mask: true
+mask_ratio: 4
+device: "0"
+workers: 8
+amp: true
+deterministic: true
+cache: false
+plots: true
+fraction: 1.0
+nms_iou: 0.7              # keep equal to the service's NMS_IOU
+tracker: none             # local, reproducible: results.csv + run directory
+augment:
+  # Photometric jitter models lighting / white balance differences.
+  hsv_h: 0.015
+  hsv_s: 0.6
+  hsv_v: 0.4
+  # Geometric ops move images and masks together. No vertical flips and no
+  # rotation beyond a few degrees: upside-down vehicles are not a deployment case.
+  degrees: 3.0
+  translate: 0.1
+  scale: 0.5
+  shear: 0.0
+  perspective: 0.0
+  flipud: 0.0
+  fliplr: 0.5
+  mosaic: 1.0
+  close_mosaic: 15        # last epochs without mosaic, closer to real photos
+  mixup: 0.0
+  cutmix: 0.0
+  copy_paste: 0.0         # off: pasting damage onto arbitrary surfaces invents implausible evidence
+  multi_scale: 0.0
+notes: >
+  Baseline. Compare every ablation against this run on the same dataset revision
+  and the same validation split.

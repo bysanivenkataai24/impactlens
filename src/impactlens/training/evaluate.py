@@ -500,6 +500,12 @@ def evaluate(
             "Speed here is measured inside the validator on this machine and is not a service latency benchmark.",
         ],
     }
+    if tile:
+        result["caveats"].append(
+            f"Tiled inference (tile={tile}) applies to the ranking metrics only. The operating-point "
+            "pass and the inference service do not tile. Check duplicate regions along tile borders "
+            "before adopting tiling."
+        )
     if result["smoke_test"]:
         result["caveats"].insert(
             0,
