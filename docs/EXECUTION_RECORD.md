@@ -12,7 +12,8 @@ Docker 29.9.2. Network limited to package registries plus a few allowed hosts.
 | Training a damage model | **Not done** | Licensed damage data (CarDD requires a signed licence request; commercial use needs authorization) and a training GPU. |
 | Evaluation / mAP of a damage model | **Not done** | A trained model and a held-out labelled split. No accuracy number exists for ImpactLens. |
 | Benchmark of a damage model on deployment hardware | **Not done** | A trained model and the deployed Space. |
-| Public deployment (Hugging Face Space) | **Not done** | Owner's Hugging Face account on a plan that can create Docker Spaces, and the checkpoint. No public URL exists. |
+| Public deployment of the full service (Docker Space) | **Not done** | Hugging Face answered 402: Docker Spaces need PRO, which the owner's account does not have; also no checkpoint. |
+| Public deployment of the review UI only | **Done 2026-11-13** | Static Space `2cooltoslay/impactlens`, https://2cooltoslay-impactlens.static.hf.space, built with `scripts/prepare_static_space.sh` from commit 64a7ef0. Verified in Chromium against the live URL: demo, photo upload, hand-drawn region, PDF export, no page errors. No API or model behind it. |
 | Real download from a pinned Hub revision | **Not verified end to end** | The sandbox network blocks the Hub's file-storage hosts (`cas-server.xethub.hf.co`, `us.aws.cdn.hf.co`). Verified instead: branch revisions are refused before any download; a failed download yields `checkpoint_download_failed` and the service keeps serving. |
 | Calibration, quality gate, part/severity/cost models | **Not implemented** (by design) | Validated data and protocols; see EVALUATION.md and EXTENSIONS.md. |
 | GitHub Actions CI | Workflow written, **not run** on GitHub | Push access to Actions; each step was run locally instead. |
