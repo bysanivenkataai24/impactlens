@@ -190,7 +190,7 @@ export function App() {
 
   const state = current ? (inference[current.id] ?? { kind: 'idle' }) : { kind: 'idle' as const };
   // A live photo has an object URL exactly when its bytes are attached in this tab.
-  const canRun = Boolean(current && !isDemo && current.object_url && state.kind !== 'running');
+  const canRun = Boolean(current && !isDemo && current.object_url && config.apiKey && state.kind !== 'running');
   const runBlocker = !current
     ? 'Add a photo first.'
     : isDemo
