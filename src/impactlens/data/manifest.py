@@ -68,6 +68,7 @@ STATUS_EXACT_DUP = "dropped_exact_duplicate"
 STATUS_NEAR_DUP = "dropped_near_duplicate"
 STATUS_ORIENTATION = "excluded_orientation_conflict"
 STATUS_SIZE_MISMATCH = "excluded_size_mismatch"
+STATUS_ONLY_DROPPED = "excluded_only_dropped_categories"
 
 
 class ManifestError(ValueError):
@@ -311,15 +312,19 @@ def build_rows(
                 "in the annotation tool, or pass --ignore-category to drop those instances."
             )
         per_image: dict[object, Counter] = defaultdict(Counter)
+        # Images that carried annotations we did not keep (ignored categories, crowd regions).
+        unlabelled_damage: Counter = Counter()
         for annotation in coco.get("annotations", []):
             name = categories.get(annotation.get("category_id"))
             if name is None:
                 raise ManifestError(f"{coco_file}: annotation with unknown category id")
             if name in ignore:
                 report["ignored_category_instances"][name] += 1
+                unlabelled_damage[annotation["image_id"]] += 1
                 continue
             if annotation.get("iscrowd"):
                 report["crowd_instances"] += 1
+                unlabelled_damage[annotation["image_id"]] += 1
                 continue
             per_image[annotation["image_id"]][name] += 1
         for image in coco.get("images", []):
@@ -339,6 +344,15 @@ def build_rows(
                 rotated = declared == (row.height, row.width) and row.exif_orientation >= 5
                 row.status = STATUS_ORIENTATION if rotated else STATUS_SIZE_MISMATCH
                 report.setdefault("excluded", []).append([row.image_id, row.status])
+            elif row.n_instances == 0 and unlabelled_damage[image["id"]]:
+                # Every region on this image belongs to a dropped category (e.g. corrosion).
+                # It shows damage, so it must not become an "undamaged" negative example.
+                row.status, row.is_negative = STATUS_ONLY_DROPPED, False
+                report.setdefault("excluded", []).append([row.image_id, row.status])
+            if row.kept and unlabelled_damage[image["id"]]:
+                report["images_with_unlabelled_dropped_regions"] = (
+                    report.get("images_with_unlabelled_dropped_regions", 0) + 1
+                )
             if row.exif_orientation != 1:
                 report.setdefault("exif_oriented_images", []).append(row.image_id)
             rows.append(row)

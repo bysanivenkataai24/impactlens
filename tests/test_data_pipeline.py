@@ -75,6 +75,46 @@ def test_manifest_round_trip_preserves_revision(smoke_rows, tmp_path):
     assert {r.image_id: r.split for r in again} == {r.image_id: r.split for r in rows}
 
 
+def test_images_with_only_dropped_categories_are_not_negatives(tmp_path):
+    (tmp_path / "images").mkdir()
+    for name in ("only_rust.jpg", "dent_and_rust.jpg", "clean.jpg"):
+        Image.new("RGB", (64, 64), (len(name) * 9 % 255, 80, 120)).save(tmp_path / "images" / name)
+    square = [[10, 10, 40, 10, 40, 40, 10, 40]]
+    coco = {
+        "images": [
+            {"id": 1, "file_name": "only_rust.jpg", "width": 64, "height": 64},
+            {"id": 2, "file_name": "dent_and_rust.jpg", "width": 64, "height": 64},
+            {"id": 3, "file_name": "clean.jpg", "width": 64, "height": 64},
+        ],
+        "annotations": [
+            {"id": 1, "image_id": 1, "category_id": 2, "segmentation": square, "iscrowd": 0},
+            {"id": 2, "image_id": 2, "category_id": 1, "segmentation": square, "iscrowd": 0},
+            {"id": 3, "image_id": 2, "category_id": 2, "segmentation": square, "iscrowd": 0},
+        ],
+        "categories": [{"id": 1, "name": "dent"}, {"id": 2, "name": "rust"}],
+    }
+    (tmp_path / "c.json").write_text(json.dumps(coco))
+    rows, report = m.build_rows(
+        data_root=tmp_path,
+        images_dir="images",
+        coco_file="c.json",
+        source="s",
+        license_text="x",
+        annotation_revision="r",
+        ignore_categories=["rust"],
+    )
+    by_name = {Path(r.image_path).name: r for r in rows}
+    # A photo of rust only shows damage: it is excluded, never an "undamaged" negative.
+    assert by_name["only_rust.jpg"].status == m.STATUS_ONLY_DROPPED
+    assert not by_name["only_rust.jpg"].is_negative and not by_name["only_rust.jpg"].kept
+    assert by_name["dent_and_rust.jpg"].kept and by_name["dent_and_rust.jpg"].class_counts == {
+        "dent": 1
+    }
+    # An image listed with no annotations at all is still a genuine negative.
+    assert by_name["clean.jpg"].kept and by_name["clean.jpg"].is_negative
+    assert report["images_with_unlabelled_dropped_regions"] == 1
+
+
 def test_unknown_categories_are_refused(tmp_path):
     (tmp_path / "images").mkdir()
     Image.new("RGB", (64, 64)).save(tmp_path / "images" / "a.jpg")
